@@ -41,6 +41,8 @@ s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 s.bind(('', port))
 s.listen()
 
+print("Server started on port", port)
+
 while True:
     connection = s.accept()
     connection_socket = connection[0]
