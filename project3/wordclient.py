@@ -28,6 +28,8 @@ def get_next_word_packet(s):
     while len(packet_buffer) < message_len:
         # Keep receiving bytes until we have a full message
         packet_buffer += s.recv(5)
+        if len(packet_buffer) == 0:
+            return None
         
     packet = packet_buffer[:message_len]
     packet_buffer = packet_buffer[message_len:]
