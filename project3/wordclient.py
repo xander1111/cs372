@@ -22,7 +22,18 @@ def get_next_word_packet(s):
 
     global packet_buffer
 
-    # TODO -- Write me!
+    packet_buffer += s.recv(5)
+    message_len = int.from_bytes(packet_buffer[:2], "big")
+    
+    while len(packet_buffer) < message_len + 2:  # +2 to account for the word length info
+        # Keep receiving bytes until we have a full message
+        packet_buffer += s.recv(5)
+        
+    packet = packet_buffer[:message_len + 2]
+    packet_buffer = packet_buffer[message_len + 2:]
+    
+    return packet
+        
 
 
 def extract_word(word_packet):
@@ -54,6 +65,7 @@ def main(argv):
 
     while True:
         word_packet = get_next_word_packet(s)
+        print(word_packet)
 
         if word_packet is None:
             break
