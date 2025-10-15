@@ -21,13 +21,13 @@ def get_next_word_packet(s):
     """
 
     global packet_buffer
-
-    packet_buffer += s.recv(5)
-    message_len = int.from_bytes(packet_buffer[:2], "big") + 2  # +2 to account for the word length info
     
+    message_len = int.from_bytes(packet_buffer[:2], "big") + 2  # +2 to account for the word length info
+
     while len(packet_buffer) < message_len:
-        # Keep receiving bytes until we have a full message
         packet_buffer += s.recv(5)
+        message_len = int.from_bytes(packet_buffer[:2], "big") + 2
+            
         if len(packet_buffer) == 0:
             return None
         
