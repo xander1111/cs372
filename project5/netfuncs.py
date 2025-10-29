@@ -146,8 +146,9 @@ def find_router_for_ip(routers, ip):
     return: None
     """
 
-    # TODO -- write me!
-    pass
+    for router_ip, router_details in routers.items():
+        if ips_same_subnet(ip, router_ip, router_details["netmask"]):
+            return router_ip
 
 # Uncomment this code to have it run instead of the real main.
 # Be sure to comment it back out before you submit!
