@@ -88,8 +88,11 @@ def ips_same_subnet(ip1, ip2, slash):
     return: False
     """
 
-    # TODO -- write me!
-    pass
+    addr1 = ipv4_to_value(ip1)
+    addr2 = ipv4_to_value(ip2)
+    mask = get_subnet_mask_value(slash)
+    
+    return addr1 & mask == addr2 & mask
 
 def get_network(ip_value, netmask):
     """
@@ -102,8 +105,7 @@ def get_network(ip_value, netmask):
     return:   0x01020300
     """
 
-    # TODO -- write me!
-    pass
+    return ip_value & netmask
 
 def find_router_for_ip(routers, ip):
     """
