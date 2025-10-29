@@ -1,6 +1,8 @@
 import sys
 import json
 
+from functools import reduce
+
 def ipv4_to_value(ipv4_addr):
     """
     Convert a dots-and-numbers IP address to a single 32-bit numeric
@@ -15,8 +17,9 @@ def ipv4_to_value(ipv4_addr):
     return:    16909060  (Which is 0x01020304 hex)
     """
 
-    # TODO -- write me!
-    pass
+    nums = [int(x) for x in ipv4_addr.split('.')]
+    shifted_nums = [nums[len(nums) - 1 - i] << (i * 8) for i in range(len(nums))]
+    return reduce(lambda x, y: x | y , shifted_nums, 0)
 
 def value_to_ipv4(addr):
     """
