@@ -37,8 +37,8 @@ def value_to_ipv4(addr):
     return: "1.2.3.4"
     """
 
-    # TODO -- write me!
-    pass
+    return ".".join([str((addr >> i) & 0xff) for i in reversed(range(0, 32, 8))])
+
 
 def get_subnet_mask_value(slash):
     """
