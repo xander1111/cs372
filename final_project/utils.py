@@ -29,12 +29,12 @@ def get_packet_data(s, buffer):
         return None
     return json.loads(packet[HEADER_LEN:])
 
-def broadcast_packet(s, packet):
+def send_packet(s, packet):
     packet = json.dumps(packet).encode()
     packet_len = len(packet)
     s.send(packet_len.to_bytes(2) + packet)
     
-def broadcast_packet_many(s, listener, packet):
+def broadcast_packet(s, listener, packet):
     packet = json.dumps(packet).encode()
     packet_len = len(packet)
     

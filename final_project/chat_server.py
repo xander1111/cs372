@@ -2,7 +2,7 @@ import socket
 import sys
 import select
 
-from utils import broadcast_packet_many, get_packet_data
+from utils import broadcast_packet, get_packet_data, send_packet
 
 HEADER_LEN = 2
 
@@ -12,14 +12,14 @@ def broadcast_chat(sockets, listener, message, nick):
         "nick": nick,
         "message": message
     }
-    broadcast_packet_many(sockets, listener, packet)
+    broadcast_packet(sockets, listener, packet)
 
 def broadcast_join(sockets, listener, nick):
     packet = {
         "type": "join",
         "nick": nick
     }
-    broadcast_packet_many(sockets, listener, packet)
+    broadcast_packet(sockets, listener, packet)
 
 
 def broadcast_dc(sockets, listener, nick):
@@ -27,7 +27,23 @@ def broadcast_dc(sockets, listener, nick):
         "type": "leave",
         "nick": nick
     }
-    broadcast_packet_many(sockets, listener, packet)
+    broadcast_packet(sockets, listener, packet)
+    
+def send_direct(socket_to, nick_from, nick_to, message):
+    packet = {
+        "type": "direct_chat",
+        "from": nick_from,
+        "to": nick_to,
+        "message": message
+    }
+    send_packet(socket_to, packet)
+    
+def send_error(socket_to, message):
+    packet = {
+        "type": "error",
+        "message": message
+    }
+    send_packet(socket_to, packet)
 
 def handle_packet(sockets, listener, socket_from, nicks, packet):
     if packet["type"] == "hello":
@@ -38,6 +54,16 @@ def handle_packet(sockets, listener, socket_from, nicks, packet):
         message = packet["message"]
         nick = nicks[socket_from]
         broadcast_chat(sockets, listener, message, nick)
+    elif packet["type"] == "direct_chat":
+        message = packet["message"]
+        nick_from = nicks[socket_from]
+        nick_to = packet["to"]
+        try:
+            socket_to = {value: key for key, value in nicks.items()}[nick_to]
+            send_direct(socket_to, nick_from, nick_to, message)
+            send_direct(socket_from, nick_from, nick_to, message)
+        except:
+            send_error(socket_from, f"User {nick_to} not found")
 
 def run_server(port):
     listener = socket.socket()
