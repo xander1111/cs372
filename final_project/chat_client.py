@@ -12,21 +12,28 @@ def send_hello(socket, nick):
     }
     send_packet(socket, packet)
 
-def server_listener(socket, nick):
+def server_listener(socket):
     buffer = b''
     while True:
         packet = get_packet_data(socket, buffer)
                 
         if packet["type"] == "join":
             print_message(f"*** {packet["nick"]} has joined the chat")
+            
         elif packet["type"] == "leave":
             print_message(f"*** {packet["nick"]} has left the chat")
+            
         elif packet["type"] == "chat":
             print_message(f"{packet["nick"]}: {packet["message"]}")
+            
         elif packet["type"] == "direct_chat":
             print_message(f"{packet["from"]} -> {packet["to"]}: {packet["message"]}")
+            
         elif packet["type"] == "error":
             print_message(f"*** Server Error >> {packet["message"]}")
+            
+        elif packet["type"] == "list":
+            print_message(f"*** Currently Connected Users >> {", ".join(packet["message"])}")
 
 def keyboard_listener(socket, nick):
     running = True
@@ -43,6 +50,11 @@ def keyboard_listener(socket, nick):
                         "type": "direct_chat",
                         "to": message.split(" ")[1],
                         "message": message.split(" ", 2)[2]
+                    }
+                    send_packet(socket, packet)
+            elif message.startswith("/list") or message.startswith("/l"):
+                    packet = {
+                        "type": "list"
                     }
                     send_packet(socket, packet)
                 
@@ -62,7 +74,7 @@ def run_client(host, port, nick):
     
     send_hello(s, nick)
     
-    server_listener_thread = threading.Thread(target=server_listener, args=(s, nick), daemon=True)
+    server_listener_thread = threading.Thread(target=server_listener, args=(s,), daemon=True)
     keyboard_listener_thread = threading.Thread(target=keyboard_listener, args=(s, nick), daemon=True)
     
     server_listener_thread.start()

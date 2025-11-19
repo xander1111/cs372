@@ -29,7 +29,7 @@ def broadcast_dc(sockets, listener, nick):
     }
     broadcast_packet(sockets, listener, packet)
     
-def send_direct(socket_to, nick_from, nick_to, message):
+def send_direct_chat(socket_to, nick_from, nick_to, message):
     packet = {
         "type": "direct_chat",
         "from": nick_from,
@@ -42,6 +42,13 @@ def send_error(socket_to, message):
     packet = {
         "type": "error",
         "message": message
+    }
+    send_packet(socket_to, packet)
+    
+def send_list(socket_to, nicks):
+    packet = {
+        "type": "list",
+        "message": list(nicks.values())
     }
     send_packet(socket_to, packet)
 
@@ -60,10 +67,12 @@ def handle_packet(sockets, listener, socket_from, nicks, packet):
         nick_to = packet["to"]
         try:
             socket_to = {value: key for key, value in nicks.items()}[nick_to]
-            send_direct(socket_to, nick_from, nick_to, message)
-            send_direct(socket_from, nick_from, nick_to, message)
+            send_direct_chat(socket_to, nick_from, nick_to, message)
+            send_direct_chat(socket_from, nick_from, nick_to, message)
         except:
             send_error(socket_from, f"User {nick_to} not found")
+    elif packet["type"] == "list":
+        send_list(socket_from, nicks)
 
 def run_server(port):
     listener = socket.socket()
