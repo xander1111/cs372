@@ -1,73 +1,43 @@
 import socket
 import sys
 import select
-import json
+
+from utils import broadcast_packet_many, get_packet_data
 
 HEADER_LEN = 2
 
-def packet_complete(data):
-    if len(data) < 2:
-        return False
-    
-    return len(data) >= (int.from_bytes(data[:HEADER_LEN], "big") + HEADER_LEN)
-
-def packet_extract(data):
-    packet_len = int.from_bytes(data[:HEADER_LEN], "big") + HEADER_LEN
-    
-    return data[:packet_len], data[packet_len:]
-
-def get_packet_raw(socket, buffer):
-    while not packet_complete(buffer):
-        buffer += socket.recv(512)
-        if len(buffer) == 0:
-            return None
-        
-    packet, buffer = packet_extract(buffer)
-        
-    return packet
-
-def get_packet_data(socket, buffer):
-    packet = get_packet_raw(socket, buffer)
-    return json.loads(packet[HEADER_LEN:])
-
-def broadcast_packet(sockets, packet):
-    packet = json.dumps(packet).encode()
-    
-    for s in sockets.keys():
-        s.send(packet)
-
-def broadcast_chat(sockets, message, nick):
+def broadcast_chat(sockets, listener, message, nick):
     packet = {
         "type": "chat",
         "nick": nick,
         "message": message
     }
-    broadcast_packet(sockets, packet)
+    broadcast_packet_many(sockets, listener, packet)
 
-def broadcast_join(sockets, nick):
+def broadcast_join(sockets, listener, nick):
     packet = {
         "type": "join",
         "nick": nick
     }
-    broadcast_packet(sockets, packet)
+    broadcast_packet_many(sockets, listener, packet)
 
 
-def broadcast_dc(sockets, nick):
+def broadcast_dc(sockets, listener, nick):
     packet = {
         "type": "leave",
         "nick": nick
     }
-    broadcast_packet(sockets, packet)
+    broadcast_packet_many(sockets, listener, packet)
 
-def handle_packet(sockets, socket_from, nicks, packet):
+def handle_packet(sockets, listener, socket_from, nicks, packet):
     if packet["type"] == "hello":
         nick = packet["nick"]
         nicks[socket_from] = nick
-        broadcast_join(sockets, nick)
-    if packet["type"] == "chat":
+        broadcast_join(sockets, listener, nick)
+    elif packet["type"] == "chat":
         message = packet["message"]
         nick = nicks[socket_from]
-        broadcast_chat(sockets, message, nick)
+        broadcast_chat(sockets, listener, message, nick)
 
 def run_server(port):
     listener = socket.socket()
@@ -95,10 +65,10 @@ def run_server(port):
                 
                 if packet is None:
                     del sockets[s]
-                    broadcast_dc(sockets, nicks[s])
+                    broadcast_dc(sockets, listener, nicks[s])
                     
                 else:
-                    handle_packet(sockets, s, nicks, packet)
+                    handle_packet(sockets, listener, s, nicks, packet)
 
 
 def usage():
