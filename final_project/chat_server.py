@@ -21,11 +21,18 @@ def broadcast_join(sockets, listener, nick):
     }
     broadcast_packet(sockets, listener, packet)
 
-
 def broadcast_dc(sockets, listener, nick):
     packet = {
         "type": "leave",
         "nick": nick
+    }
+    broadcast_packet(sockets, listener, packet)
+    
+def broadcast_me(sockets, listener, message, nick):
+    packet = {
+        "type": "me",
+        "nick": nick,
+        "message": message
     }
     broadcast_packet(sockets, listener, packet)
     
@@ -73,6 +80,10 @@ def handle_packet(sockets, listener, socket_from, nicks, packet):
             send_error(socket_from, f"User {nick_to} not found")
     elif packet["type"] == "list":
         send_list(socket_from, nicks)
+    elif packet["type"] == "me":
+        message = packet["message"]
+        nick = nicks[socket_from]
+        broadcast_me(sockets, listener, message, nick)
 
 def run_server(port):
     listener = socket.socket()

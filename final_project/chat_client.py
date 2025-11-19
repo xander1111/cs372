@@ -34,6 +34,9 @@ def server_listener(socket):
             
         elif packet["type"] == "list":
             print_message(f"*** Currently Connected Users >> {", ".join(packet["message"])}")
+            
+        elif packet["type"] == "me":
+            print_message(f"[{" ".join((packet["nick"], packet["message"]))}]")
 
 def keyboard_listener(socket, nick):
     running = True
@@ -53,8 +56,15 @@ def keyboard_listener(socket, nick):
                     }
                     send_packet(socket, packet)
             elif message.startswith("/list") or message.startswith("/l"):
+                packet = {
+                    "type": "list"
+                }
+                send_packet(socket, packet)
+            elif message.startswith("/me"):
+                if len(message.split(" ")) >= 2:
                     packet = {
-                        "type": "list"
+                        "type": "me",
+                        "message": message.split(" ", 1)[1]
                     }
                     send_packet(socket, packet)
                 
