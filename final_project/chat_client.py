@@ -1,7 +1,6 @@
 import sys
 import socket
 import threading
-import json
 
 from chatui import init_windows, read_command, print_message, end_windows
 from utils import broadcast_packet, get_packet_data
@@ -12,6 +11,10 @@ def send_hello(socket, nick):
         "nick": nick
     }
     broadcast_packet(socket, packet)
+    
+def handle_command(command):
+    if command.startswith("/q"):
+        return "quit"
 
 def server_listener(socket):
     buffer = b''
@@ -26,10 +29,16 @@ def server_listener(socket):
             print_message(f"{packet["nick"]}> {packet["message"]}")
 
 def keyboard_listener(socket, nick):
-    while True:
+    running = True
+    
+    while running:
         message = read_command(f"{nick}> ")
         
-        # TODO add /q command
+        if message.startswith("/"):
+            command_res = handle_command(message)
+            if command_res == "quit":
+                running = False
+                continue
         
         packet = {
             "type": "chat",
@@ -53,7 +62,7 @@ def run_client(host, port, nick):
     keyboard_listener_thread.start()
     
     keyboard_listener_thread.join()
-    # server_listener_thread is set to daemon, so we shouldn't have to join it
+    # server_listener_thread is set to be a daemon, so we shouldn't have to join it
     
     end_windows()
     
