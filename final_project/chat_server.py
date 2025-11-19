@@ -58,10 +58,24 @@ def send_list(socket_to, nicks):
         "message": list(nicks.values())
     }
     send_packet(socket_to, packet)
+    
+def close_connection(socket, message):
+    packet = {
+        "type": "close",
+        "message": message
+    }
+    send_packet(socket, packet)
+    socket.close()
 
 def handle_packet(sockets, listener, socket_from, nicks, packet):
     if packet["type"] == "hello":
         nick = packet["nick"]
+
+        if nick in nicks.values():
+            close_connection(socket_from, f"The nickname '{nick}' is taken, please choose a different name")
+            del sockets[socket_from]
+            return
+        
         nicks[socket_from] = nick
         broadcast_join(sockets, listener, nick)
     elif packet["type"] == "chat":
@@ -112,6 +126,7 @@ def run_server(port):
                 if packet is None:
                     del sockets[s]
                     broadcast_dc(sockets, listener, nicks[s])
+                    del nicks[s]
                     
                 else:
                     handle_packet(sockets, listener, s, nicks, packet)
