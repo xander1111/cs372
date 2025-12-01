@@ -24,10 +24,13 @@ def get_packet_raw(s, buffer):
     return packet
 
 def get_packet_data(s, buffer):
-    packet = get_packet_raw(s, buffer)
-    if packet is None:
-        return None
-    return json.loads(packet[HEADER_LEN:])
+    try:
+        packet = get_packet_raw(s, buffer)
+        if packet is None:
+            return None
+        return json.loads(packet[HEADER_LEN:])
+    except ConnectionResetError:
+        return {"type": "reset"}
 
 def send_packet(s, packet):
     packet = json.dumps(packet).encode()

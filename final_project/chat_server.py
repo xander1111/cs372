@@ -98,6 +98,13 @@ def handle_packet(sockets, listener, socket_from, nicks, packet):
         message = packet["message"]
         nick = nicks[socket_from]
         broadcast_me(sockets, listener, message, nick)
+    elif packet["type"] == "reset":
+        try:
+            del sockets[socket_from]
+            broadcast_dc(sockets, listener, nicks[socket_from])
+            del nicks[socket_from]
+        except:
+            pass  # Usually just means the user didn't set a nickname, the connection reset either way so there's not much we can do
 
 def run_server(port):
     listener = socket.socket()
